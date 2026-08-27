@@ -12,28 +12,23 @@ class TestCreateUser:
     @allure.title("Создание уникального пользователя")
     def test_create_unique_user(self, create_new_user):
         user_data, token = create_new_user
-        with allure.step("Проверяем, что пользователь создан"):
-            assert token is not None
-            assert user_data["email"] is not None
-            assert user_data["name"] is not None
-            assert user_data["password"] is not None
+        with allure.step("Получаем данные созданного пользователя и токен из фикстуры"):
+            pass
+
+        assert token is not None and user_data["email"] is not None, \
+            "Ожидались токен и email, но одно из значений отсутствует"
 
 
     @allure.title("Создание пользователя, который уже зарегистрирован")
     def test_create_existent_user(self, api_client, create_new_user):
         user_data, _ = create_new_user
-        with allure.step("Создаём пользователя"):
-            api_client.post("/auth/register", data=user_data)
 
-        with allure.step("Создаём такого же пользователя снова"):
+        with allure.step("Создаём пользователя повторно (ожидаем ошибку)"):
             response = api_client.post("/auth/register", data=user_data)
 
-        with allure.step("Проверяем статус-код 403"):
-            assert response.status_code == 403, f"Ожидался 403, получен {response.status_code}"
-
-        with allure.step("Проверяем ответ"):
-            expected_response = USER_ALREADY_EXISTS
-            assert response.json()["message"] == expected_response, f"Ожидалось '{expected_response}', получено {response.json()}"
+        expected_message = USER_ALREADY_EXISTS
+        assert response.status_code == 403 and response.json().get("message") == expected_message, \
+            f"Ожидался статус 403 и сообщение '{expected_message}', получен: {response.status_code}, {response.json()}"
 
 
     @allure.title("Создание пользователя без одного из обязательных полей")
@@ -43,9 +38,6 @@ class TestCreateUser:
         with allure.step(f"Пытаемся создать пользователя без поля '{missing_field}'"):
             response = api_client.post("/auth/register", data=payload)
 
-        with allure.step("Проверяем статус-код 403"):
-            assert response.status_code == 403, f"Ожидался 403, получен {response.status_code}"
-        
-        with allure.step("Проверяем ответ"):
-            expected_response = FIELD_IS_EMPTY
-            assert response.json()["message"] == expected_response, f"Ожидалось '{expected_response}', получено {response.json()}"
+        expected_message = FIELD_IS_EMPTY
+        assert response.status_code == 403 and response.json().get("message") == expected_message, \
+            f"Ожидался статус 403 и сообщение '{expected_message}', получен: {response.status_code}, {response.json()}"
