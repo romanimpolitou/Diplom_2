@@ -1,0 +1,1 @@
+BASE_ENDPOINT = "https://stellarburgers.education-services.ru/api"
